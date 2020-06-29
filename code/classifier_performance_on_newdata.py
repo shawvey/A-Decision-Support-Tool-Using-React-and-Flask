@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu Jun 18 14:52:46 2020
+Created on Mon Jun 29 18:45:02 2020
 
 @author: shawvey
 """
@@ -26,29 +26,22 @@ def plot_roc_curve(fpr1, tpr1, fpr2, tpr2):
     plt.legend()
     plt.show()
 
-dataset = pd.read_csv('imputated_data.csv')
+dataset = pd.read_csv('imputated_newdata.csv')
 X = dataset.iloc[:, 1:-2]
 Y = dataset.iloc[:, -1]
 xtrain,xtest,ytrain,ytest = train_test_split(X,Y,test_size=0.3)
 acc_scorer = make_scorer(accuracy_score)
 
+"""
 # RandomForest 
 from sklearn.ensemble import RandomForestClassifier
-rf = RandomForestClassifier()
-#parameters = { 'max_features':np.arange(1,10),'n_estimators':[100],'min_samples_leaf':[1,10,50,100,200,500],'max_depth': range(1,15,2)}
-parameters = {'n_estimators': [4, 6, 9], 
-              'max_features': ['log2', 'sqrt','auto'], 
-              'criterion': ['entropy', 'gini'],
-              'max_depth': [2, 3, 5, 10], 
-              'min_samples_split': [2, 3, 5],
-              'min_samples_leaf': [1,5,8]
-             }
-grid = GridSearchCV(rf, parameters, cv = 5, scoring=acc_scorer)
-grid.fit(xtrain,ytrain)
-print(grid.best_score_)
-print(grid.best_params_)
-print(grid.best_estimator_)
-rf = grid.best_estimator_
+rf = RandomForestClassifier(bootstrap=True, class_weight=None, criterion='entropy',
+                       max_depth=5, max_features='sqrt', max_leaf_nodes=None,
+                       min_impurity_decrease=0.0, min_impurity_split=None,
+                       min_samples_leaf=1, min_samples_split=3,
+                       min_weight_fraction_leaf=0.0, n_estimators=9,
+                       n_jobs=None, oob_score=False, random_state=None,
+                       verbose=0, warm_start=False)
 rf.fit(xtrain,ytrain)
 probs1 = rf.predict_proba(xtest)
 probs1 = probs1[:, 1]
@@ -61,23 +54,14 @@ print('AUC_Trainset: %.2f' % auc2)
 fpr1, tpr1, thresholds1 = roc_curve(ytest, probs1)
 fpr2, tpr2, thresholds2 = roc_curve(ytrain, probs2)
 plot_roc_curve(fpr1, tpr1, fpr2, tpr2)
-
-
 """
 
+"""
 # KNeighborsClassifier 
 from sklearn.neighbors import KNeighborsClassifier 
-model=KNeighborsClassifier(n_neighbors=5)
-#print(model)
-#print(predicted)
-k_range = list(range(1,31))
-param_grid = dict(n_neighbors = k_range)
-grid = GridSearchCV(model, param_grid, cv=5, scoring=acc_scorer)
-grid.fit(xtrain,ytrain)
-print(grid.best_score_)
-print(grid.best_params_)
-print(grid.best_estimator_)
-model = grid.best_estimator_
+model=KNeighborsClassifier(algorithm='auto', leaf_size=30, metric='minkowski',
+                     metric_params=None, n_jobs=None, n_neighbors=28, p=2,
+                     weights='uniform')
 model.fit(xtrain,ytrain)
 probs1 = model.predict_proba(xtest)
 probs1 = probs1[:, 1]
@@ -95,15 +79,12 @@ plot_roc_curve(fpr1, tpr1, fpr2, tpr2)
 """
 # DecisionTree 
 from sklearn import tree
-clf = tree.DecisionTreeClassifier(criterion='entropy')
-acc_scorer = make_scorer(accuracy_score)
-param_grid = {'max_depth': np.arange(3, 15),'criterion':['gini','entropy']}
-grid = GridSearchCV(clf, param_grid, scoring=acc_scorer, cv=5)
-grid.fit(xtrain,ytrain)
-print(grid.best_score_)
-print(grid.best_params_)
-print(grid.best_estimator_)
-clf = grid.best_estimator_
+clf = tree.DecisionTreeClassifier(class_weight=None, criterion='entropy', max_depth=6,
+                       max_features=None, max_leaf_nodes=None,
+                       min_impurity_decrease=0.0, min_impurity_split=None,
+                       min_samples_leaf=1, min_samples_split=2,
+                       min_weight_fraction_leaf=0.0, presort=False,
+                       random_state=None, splitter='best')
 clf.fit(xtrain,ytrain)
 probs1 = clf.predict_proba(xtest)
 probs1 = probs1[:, 1]
@@ -122,16 +103,9 @@ plot_roc_curve(fpr1, tpr1, fpr2, tpr2)
 """
 # naive_bayes 
 from sklearn.naive_bayes import GaussianNB
-model = GaussianNB()
+model = GaussianNB(priors=None, var_smoothing=1e-09)
 #print(model)
 #print(predicted)
-parameters = {}
-grid = GridSearchCV(model, parameters, scoring=acc_scorer, cv=5)
-grid.fit(xtrain, ytrain)
-model = grid.best_estimator_
-print(grid.best_score_)
-print(grid.best_params_)
-print(grid.best_estimator_)
 model.fit(xtrain, ytrain)
 probs1 = model.predict_proba(xtest)
 probs1 = probs1[:, 1]
@@ -145,21 +119,14 @@ fpr1, tpr1, thresholds1 = roc_curve(ytest, probs1)
 fpr2, tpr2, thresholds2 = roc_curve(ytrain, probs2)
 plot_roc_curve(fpr1, tpr1, fpr2, tpr2)
 """
-
 """
 # svm 
 from sklearn.svm import SVC
 
-svclassifier = SVC(kernel='linear',probability=True)
-Cs = [0.001, 0.01, 0.1, 1, 10]
-gammas = [0.001, 0.01, 0.1, 1]
-param_grid = {'C': Cs, 'gamma' : gammas}
-grid = GridSearchCV(svclassifier, param_grid,cv=5, scoring=acc_scorer)
-grid.fit(xtrain,ytrain)
-print(grid.best_score_)
-print(grid.best_params_)
-print(grid.best_estimator_)
-model = grid.best_estimator_
+model = SVC(C=10, cache_size=200, class_weight=None, coef0=0.0,
+    decision_function_shape='ovr', degree=3, gamma=0.001, kernel='linear',
+    max_iter=-1, probability=True, random_state=None, shrinking=True, tol=0.001,
+    verbose=False)
 model.fit(xtrain,ytrain)
 probs1 = model.predict_proba(xtest)
 probs1 = probs1[:, 1]
